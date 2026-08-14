@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>日本升龙道 枫叶季 巡礼地图</title>
+<link rel="stylesheet" href="leaflet.css"/>
+<script src="leaflet.js"></script>
+<style>
+  :root{
+    --hotel:#F4A300; --tourist:#E63946; --anime:#7C3AED;
+    --shira:#0E9594; --kanazawa:#2563EB; --nagoya:#EA580C; --ref:#64748B;
+    --bg:#eef1f5; --panel:#ffffff; --ink:#222633; --muted:#6b7280; --line:#e5e7eb;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:var(--ink);overflow:hidden}
+  #app{display:flex;height:100vh;overflow:hidden;position:relative}
+
+  /* 侧栏 */
+  #sidebar{width:360px;min-width:360px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;overflow:hidden;transition:margin-left .3s ease;z-index:1000}
+  #sidebar.collapsed{margin-left:-360px}
+  #side-head{padding:14px 16px;border-bottom:1px solid var(--line);position:relative}
+  #side-head h1{font-size:18px;margin:0 0 4px;padding-right:28px}
+  #side-head .sub{font-size:12px;color:var(--muted)}
+  #side-close{position:absolute;top:14px;right:12px;width:28px;height:28px;border:none;background:#f0f1f4;border-radius:8px;font-size:16px;cursor:pointer;color:#666;display:flex;align-items:center;justify-content:center;line-height:1}
+  #side-close:hover{background:#e2e5ea}
+  #legend{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px;border-bottom:1px solid var(--line)}
+  .lg{display:flex;align-items:center;gap:5px;font-size:11px;color:#444}
+  .lg .d{width:11px;height:11px;border-radius:50%}
+  #filters{padding:8px 16px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line)}
+  .chip{font-size:11px;padding:4px 9px;border:1px solid var(--line);border-radius:999px;background:#f7f8fa;cursor:pointer;user-select:none}
+  .chip.off{opacity:.4;text-decoration:line-through}
+  #list{flex:1;overflow-y:auto;padding:6px 10px 20px;-webkit-overflow-scrolling:touch}
+  .group-title{font-size:12px;font-weight:700;color:var(--muted);margin:12px 6px 6px;letter-spacing:.5px}
+  .card{display:flex;gap:10px;padding:8px;border-radius:12px;cursor:pointer;transition:background .15s}
+  .card:hover{background:#f3f5f9}
+  .card:active{background:#e8ecf2}
+  .card .thumb{width:78px;height:60px;flex:0 0 78px;border-radius:9px;object-fit:cover;background:#e9edf2;display:flex;align-items:center;justify-content:center;color:#9aa3b2;font-size:10px;overflow:hidden}
+  .card .thumb img{width:100%;height:100%;object-fit:cover}
+  .card .thumb-ph, .pop-img-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;background:linear-gradient(135deg,#9aa6b8,#6b7689)}
+  .pop-img-ph{height:150px;border-radius:8px;margin-bottom:8px;font-size:34px}
+  .card .info{min-width:0;flex:1}
+  .card .nm{font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:6px}
+  .card .nm .badge{font-size:10px;color:#fff;border-radius:5px;padding:1px 5px;font-weight:700}
+  .card .meta{font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .card .hist{font-size:11px;color:#555;margin-top:3px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+
+  /* 纯文字列表（巡礼/购物）—— 靠左无缩略图，撑满侧栏宽度 */
+  .text-item{padding:5px 14px;border-bottom:1px solid #f0f1f4;cursor:pointer;transition:background .12s;font-size:13px;line-height:1.4;margin:0 -10px}
+  .text-item:hover{background:#f3f5f9}
+  .text-item:active{background:#e8ecf2}
+  .text-item .ti-id{font-size:10px;color:#fff;border-radius:4px;padding:1px 5px;font-weight:700;margin-right:5px}
+  .text-item .ti-name{font-weight:600}
+  .text-item .ti-meta{font-size:10.5px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* 地图 */
+  #map{flex:1;height:100%;z-index:1}
+  .leaflet-popup-content-wrapper{border-radius:12px}
+  .pop{max-width:260px}
+  .pop img{width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:8px;background:#eee}
+  .pop .pt{font-size:15px;font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:6px}
+  .pop .pb{font-size:10px;color:#fff;border-radius:5px;padding:1px 6px;font-weight:700}
+  .pop .row{font-size:12px;color:#444;margin:3px 0}
+  .pop .row b{color:#222}
+  .pop .hist{font-size:12px;color:#444;line-height:1.55;margin-top:6px}
+  .pop .near{font-size:11.5px;color:#0b6; background:#eafaf1;border-radius:8px;padding:6px 8px;margin-top:7px;line-height:1.5}
+
+  /* 侧栏开关按钮 */
+  #sideOpen{position:absolute;top:12px;left:12px;z-index:999;width:42px;height:42px;border:none;background:#fff;border-radius:10px;font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.18);display:none;align-items:center;justify-content:center;color:#333}
+  #sideOpen:active{background:#f0f1f4}
+
+  /* 右上角控件 */
+  .ctrl{position:absolute;top:12px;right:12px;z-index:1000;display:flex;flex-direction:column;gap:8px}
+  .ctrl button{background:#fff;border:1px solid #d6dae1;border-radius:10px;padding:8px 12px;font-size:13px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.12);color:#222}
+  .ctrl button.active{background:#2563eb;color:#fff;border-color:#2563eb}
+  .loading{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:1000;background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 14px;font-size:12px;color:#555;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .foot{font-size:10.5px;color:var(--muted);padding:8px 16px;border-top:1px solid var(--line);line-height:1.5}
+
+  /* 瓦片加载失败提示 */
+  #tileHint{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:1000;background:#fff3cd;border:1px solid #ffc107;border-radius:10px;padding:8px 14px;font-size:12px;color:#856404;box-shadow:0 2px 8px rgba(0,0,0,.12);display:none;max-width:90%;text-align:center;line-height:1.5}
+
+  /* Leaflet 图层切换器样式微调 */
+  .leaflet-control-layers{border-radius:10px!important;box-shadow:0 2px 8px rgba(0,0,0,.15)!important}
+  .leaflet-control-layers label{font-size:12px;margin:3px 0}
+  .leaflet-control-layers-toggle{background-image:none!important;width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-size:18px}
+  .leaflet-control-layers-toggle::before{content:'🗺'}
+
+  /* 手机端 */
+  @media(max-width:760px){
+    #sidebar{position:absolute;width:86%;max-width:340px;height:100%;box-shadow:2px 0 16px rgba(0,0,0,.25);z-index:1100}
+    #sidebar.collapsed{margin-left:-86%}
+    #sideOpen{display:flex}
+    #side-close{width:34px;height:34px;font-size:18px}
+    .ctrl{top:12px;right:8px;gap:6px}
+    .ctrl button{padding:7px 10px;font-size:12px}
+    .pop{max-width:220px}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <button id="sideOpen" title="打开列表">☰</button>
+  <aside id="sidebar">
+    <div id="side-head">
+      <button id="side-close" title="收起列表">✕</button>
+      <h1>日本升龙道 枫叶季 巡礼地图</h1>
+      <div class="sub">点击卡片或地图标记查看实拍照片与历史介绍 · 共 <span id="cnt">0</span> 处</div>
+    </div>
+    <div id="legend"></div>
+    <div id="filters"></div>
+    <div id="list"></div>
+    <div class="foot">酒店顺序：下吕 → 高山 → 金泽 → 名古屋。<br>坐标为 WGS-84，可复制到 Google/Apple 地图导航。<br>如果地图空白，请点右上角图层按钮切换底图。</div>
+  </aside>
+  <div id="map"></div>
+</div>
+<div class="ctrl">
+  <button id="bTrip" class="active">🟠 经典线路</button>
+  <button id="bAni" class="active">🟣 巡礼路线</button>
+  <button id="bAll">🔍 显示全部</button>
+</div>
+<div class="loading" id="loading">正在加载部分预览图…</div>
+<div id="tileHint">底图加载失败？请点右上角「图层」按钮切换其他底图</div>
+
+<script>
+// ---------- 分类定义 ----------
+const CATS = {
+  hotel:    {name:'我的酒店',     color:'#F4A300', icon:'🏨'},
+  tourist:  {name:'高山必去景点', color:'#E63946', icon:'🏯'},
+  anime:    {name:'你的名字·圣地巡礼', color:'#7C3AED', icon:'🎬'},
+  shira:    {name:'白川乡',       color:'#0E9594', icon:'🏡'},
+  kanazawa: {name:'金泽景点',     color:'#2563EB', icon:'🏰'},
+  nagoya:   {name:'名古屋景点',   color:'#EA580C', icon:'🏙'},
+  shopping: {name:'名古屋购物',   color:'#DB2777', icon:'🛍'},
+  ref:      {name:'周边参考',     color:'#64748B', icon:'📍'},
+};
+
+// ---------- 景点数据 ----------
+const SPOTS = [
+  // 我的酒店（顺序：下吕 → 高山 → 金泽 → 名古屋）
+  {id:'H1',cat:'hotel',num:1,name:'下吕水明馆',lat:35.8088,lng:137.2395,
+   addr:'岐阜県下呂市幸田1268', hours:'入住14:00/退房11:00', fee:'—',
+   photo:'photos/H1.jpg',
+   wiki:'Gero Onsen', wiki2:'Gero Gifu ryokan',
+   hist:'创业于明治时代的下吕温泉老铺旅馆，沿飞驒川而建，由临川阁、青岚庄等多栋馆舍组成。以"东海第一"的规模与泉质著称，从下吕站步行约3–6分钟即达。',
+   near:'下吕温泉乡核心，徒步可至汤之街公共浴场与足汤。'},
+  {id:'H2',cat:'hotel',num:2,name:'东急STAY飞驒高山 结之汤',lat:36.1429,lng:137.2544,
+   addr:'岐阜県高山市花里町4-301', hours:'入住15:00/退房11:00', fee:'—',
+   photo:'photos/H2.jpg',
+   wiki:'Hida Takayama', wiki2:'Takayama Gifu',
+   hist:'2020年开业的都市型温泉酒店，紧邻JR高山站（步行约2分钟）。顶楼设足汤、2楼为温泉大浴场，客房内配洗衣机与微波炉，适合连住型旅行。',
+   near:'紧邻浓飞巴士中心与宫川，去白川乡、新穗高的巴士在此发车。'},
+  {id:'H3',cat:'hotel',num:3,name:'金泽日航酒店',lat:36.5768,lng:136.6512,
+   addr:'石川県金沢市本町2-15-1', hours:'入住15:00/退房12:00', fee:'—',
+   photo:'photos/H3.jpg',
+   wiki:'Kanazawa Station', wiki2:'Kanazawa city',
+   hist:'金泽站前地标性高层酒店（地上30层），客房均在17层以上，可俯瞰城下町。步行至金泽站鼓门约3分钟，近江町市场约10分钟步行。',
+   near:'楼下即金泽站与鼓门，前往兼六园、东茶屋街极便利。'},
+  {id:'H4',cat:'hotel',num:4,name:'坎帕纳名古屋船酒店',lat:35.1713,lng:136.8840,
+   addr:'愛知県名古屋市中村区椿町5-30', hours:'入住15:00/退房11:00', fee:'—',
+   photo:'photos/H4.jpg',
+   wiki:'Vessel Hotel Campana Nagoya', wiki2:'Vessel Hotel Nagoya Tsubaki-cho',
+   hist:'Vessel Hotels旗下主打「心满意足的睡眠」品牌，位于名古屋站西口步行约5分钟。2021年改装，主楼连接椿町线地下通道直达JR名古屋站太閤通口，雨天也不用撑伞。客房配置希尔頓同款Serta床垫，13-14楼为女性专用楼层。',
+   near:'名古屋站太閤通口（北口）步行约5分钟，紧邻名鉄百貨店与MIDLAND SQUARE。'},
+
+  // 高山必去景点
+  {id:'T1',cat:'tourist',num:1,name:'高山陣屋',lat:36.1395,lng:137.2535,
+   addr:'岐阜県高山市八轩町1-5', hours:'8:45–17:00（冬季至16:30）', fee:'成人440円',
+   photo:'photos/T1.jpg',
+   wiki:'Takayama Jinya',
+   hist:'日本现存唯一由江户幕府直辖的代官所（地方官署）建筑，建于1811年。保留审讯室、审理场与广袤的草药庭院，是了解飞驒治理史的核心史料。',
+   near:'步行4分钟到三町筋与宫川朝市。'},
+  {id:'T2',cat:'tourist',num:2,name:'三町筋（上三之町）',lat:36.1410,lng:137.2540,
+   addr:'岐阜県高山市上三之町', hours:'全天（店铺约9:00–17:00）', fee:'免费',
+   photo:'photos/T2.jpg',
+   wiki:'Takayama Sanmachi Suji street',
+   hist:'江户至明治时期繁荣的商家聚落，保留格子窗与红壳漆土藏。是飞驒高山最经典的散步街，云集味噌店、酒藏与工艺品店。',
+   near:'南邻宫川、北接宫川朝市，沿途多酒藏与味噌试吃。'},
+  {id:'T3',cat:'tourist',num:3,name:'宮川朝市',lat:36.1412,lng:137.2532,
+   addr:'岐阜県高山市宮川沿い', hours:'约7:00–12:00', fee:'免费',
+   photo:'photos/T3.jpg',
+   wiki:'Miyagawa morning market Takayama',
+   hist:'与大阪神无柄、京都上贺茂并称"日本三大朝市"之一，自江户时代延续至今。沿宫川两岸贩售山地蔬菜、渍物与手作杂货，清晨最热闹。',
+   near:'紧邻三町筋，步行2分钟到高山陣屋。'},
+  {id:'T4',cat:'tourist',num:4,name:'飛騨国分寺',lat:36.1432,lng:137.2520,
+   addr:'岐阜県高山市城山町1-83', hours:'境内自由（本堂需确认）', fee:'免费',
+   photo:'photos/T4.jpg',
+   wiki:'Hida Kokubunji temple Takayama',
+   hist:'天平13年（741年）圣武天皇敕建的国分寺之一，本堂为江户重建。院内有树龄超1200年、公认为日本前三大银杏，秋季金黄壮观。',
+   near:'步行5分钟到高山陣屋，旁有推定飞驒匠双子杉。'},
+  // 你的名字·圣地巡礼
+  {id:'A1',cat:'anime',num:1,name:'飛騨山王宫日枝神社',lat:36.1438,lng:137.2508,
+   addr:'岐阜県高山市山王町', hours:'自由参拜', fee:'免费',
+   wiki:'Hida Sanno Hie Shrine',
+   hist:'《你的名字。》中"宫水神社"的主要原型。红色楼门与石阶参道、被山林环抱的氛围与片中高度吻合，是圣地巡礼第一站。',
+   near:'位于高山市内西部山手，从三町筋步行约10分钟上山。'},
+  {id:'A2',cat:'anime',num:2,name:'飛騨古川駅',lat:36.2067,lng:137.1772,
+   addr:'岐阜県飛騨市古川町駅前通', hours:'终电约22:00', fee:'—',
+   wiki:'Hida-Furukawa Station',
+   hist:'片中男主瀧从东京搭乘电车抵达"糸守町"时下车的车站原型。白色站房与黄色站名标牌是经典打卡点。',
+   near:'高山本线，高山站乘JR约15分钟；站前即古川まつり会館。'},
+  {id:'A3',cat:'anime',num:3,name:'飛騨市図書館',lat:36.2070,lng:137.1768,
+   addr:'岐阜県飛騨市古川町本町', hours:'9:30–19:00（周一休）', fee:'免费',
+   wiki:'Hida City Library',
+   hist:'瀧为寻找糸守町资料而造访的市立图书馆原型。实景为现代木造建筑，拍摄需在柜台申请许可，请遵守馆内规定。',
+   near:'古川站步行约3分钟，与白壁土蔵街相邻。'},
+  {id:'A4',cat:'anime',num:4,name:'気多若宮神社',lat:36.2055,lng:137.1750,
+   addr:'岐阜県飛騨市古川町上気多', hours:'自由参拜', fee:'免费',
+   wiki:'Kita Wakamiya Shrine Hida Furukawa',
+   hist:'宫水神社的另一重要原型，境内有"产灵（むすび）"motif 与绳结装饰，呼应电影核心意象。',
+   near:'古川町内，从白壁土蔵街步行约5分钟。'},
+  {id:'A5',cat:'anime',num:5,name:'白壁土蔵街・瀬戸川',lat:36.2045,lng:137.1745,
+   addr:'岐阜県飛騨市古川町', hours:'全天', fee:'免费',
+   wiki:'Furukawa white wall storehouse street',
+   hist:'古川町的白墙土藏与流经街心的瀬戸川，是糸守町静谧街道景观的灵感来源。两岸垂柳与锦鲤极具氛围。',
+   near:'古川站步行约5分钟，串联気多若宮神社与味処古川。'},
+  {id:'A6',cat:'anime',num:6,name:'味処古川',lat:36.2050,lng:137.1760,
+   addr:'岐阜県飛騨市古川町', hours:'约11:00–15:00', fee:'—',
+   wiki:'Furukawa Gifu old street',
+   hist:'片中瀧一行人品尝五平饼（ごへい餅）的食堂原型之一，位于古川町内。五平饼是飞驒地方名物。',
+   near:'白壁土蔵街沿线，建议顺路品尝。'},
+  {id:'A7',cat:'anime',num:7,name:'飛騨萩原駅踏切',lat:36.2490,lng:137.2370,
+   addr:'岐阜県下呂市萩原', hours:'全天', fee:'免费',
+   wiki:'Hagiwara Station Gifu railway crossing',
+   hist:'片中出现的铁路道口场景原型，位于萩原地区。平交道与背景山景还原了动画镜头。',
+   near:'高山本线萩原站旁，高山↔下吕间车上可见。'},
+
+  // 白川乡
+  {id:'S1',cat:'shira',num:1,name:'白川乡合掌村（荻町）',lat:36.2567,lng:137.2247,
+   addr:'岐阜県大野郡白川村荻町', hours:'集落自由（民家收费）', fee:'部分民家300–500円',
+   photo:'photos/S1.jpg',
+   wiki:'Shirakawa-go gassho zukuri village',
+   hist:'世界文化遗产，以"合掌造"茅草屋顶民居聚落闻名。地势与集落形态正是《你的名字。》糸守町的原型之一。',
+   near:'从高山乘浓飞巴士约50分钟；村内和田家、神田家可入内。'},
+  {id:'S2',cat:'shira',num:2,name:'荻町城跡展望台',lat:36.2535,lng:137.2275,
+   addr:'岐阜県大野郡白川村荻町', hours:'展望台自由', fee:'免费',
+   photo:'photos/S2.jpg',
+   wiki:'Shirakawa-go Ogimachi castle ruins observation point',
+   hist:'俯瞰整个白川乡合掌集落的最佳视角，可拍到经典明信片构图。也是电影中糸守湖周边的取景参考。',
+   near:'从村中心步行约15分钟上山，建议清晨或黄昏前往。'},
+  {id:'S3',cat:'shira',num:3,name:'和田家',lat:36.2570,lng:137.2240,
+   addr:'岐阜県大野郡白川村荻町', hours:'9:00–17:00', fee:'成人300円',
+   photo:'photos/S3.jpg',
+   wiki:'Wada house Shirakawa-go',
+   hist:'白川乡最大、最具代表性的合掌造民家之一，已列为重要文化财。内部展示养蚕与民居生活，可入内参观。',
+   near:'集落中心，与神田家相邻。'},
+
+  // 金泽
+  {id:'K1',cat:'kanazawa',num:1,name:'兼六园',lat:36.5621,lng:136.6607,
+   addr:'石川県金沢市兼六町', hours:'7:00–18:00', fee:'成人320円',
+   photo:'photos/A1.jpg',
+   wiki:'Kenroku-en garden Kanazawa',
+   hist:'日本三名园之一，江户时代加贺藩的回游式庭园。春樱、夏绿、秋枫、冬"雪吊"四季皆景，紧邻金泽城。',
+   near:'与金泽城同属城址公园，步行约5分钟。'},
+  {id:'K2',cat:'kanazawa',num:2,name:'金泽城',lat:36.5610,lng:136.6580,
+   addr:'石川県金沢市丸の内', hours:'7:00–18:00', fee:'外围免费（菱櫓等收费）',
+   photo:'photos/K2.jpg',
+   wiki:'Kanazawa Castle Ishikawa',
+   hist:'加贺百万石前田氏的居城，石墙与复原的菱橹、五十间长屋展现武家威容。与兼六园同属金泽城址公园。',
+   near:'兼六园旁，步行约5分钟到近江町市场。'},
+  {id:'K3',cat:'kanazawa',num:3,name:'21世纪美术馆',lat:36.5592,lng:136.6640,
+   addr:'石川県金沢市広坂1-2', hours:'10:00–18:00（周一休）', fee:'通票约1200円',
+   photo:'photos/K3.jpg',
+   wiki:'21st Century Museum of Contemporary Art Kanazawa',
+   hist:'金泽现代艺术地标，圆形透明建筑由妹岛和世设计。最著名的展品是"泳池"（Leandro Erlich 的虚像空间）。',
+   near:'兼六园步行约8分钟，近江町市场方向。'},
+  {id:'K4',cat:'kanazawa',num:4,name:'东茶屋街',lat:36.5580,lng:136.6720,
+   addr:'石川県金沢市東山', hours:'店铺约9:00–17:00', fee:'免费（部分茶屋收费）',
+   photo:'photos/K4.jpg',
+   wiki:'Higashi Chaya district Kanazawa',
+   hist:'金泽三大茶屋街之一，保留江户格子的茶屋与石板路。现今有金箔体验、抹茶与和菓子老铺，是拍照胜地。',
+   near:'从金泽站乘巴士约15分钟，近主计町茶屋街。'},
+
+  // 名古屋
+  {id:'N1',cat:'nagoya',num:1,name:'名古屋城',lat:35.1856,lng:136.9066,
+   addr:'愛知県名古屋市中区本丸', hours:'9:00–16:30', fee:'成人500円',
+   photo:'photos/N1.jpg',
+   wiki:'Nagoya Castle',
+   hist:'德川家康于1612年下令建造，金鯱天守为名古屋象征。1945年毁于空袭，现天守为钢筋混凝土复建，本丸御殿木造复原极精致。',
+   near:'地铁名城线「市役所」站步行约5分钟，名古屋站乘巴士约15分钟。'},
+  {id:'N2',cat:'nagoya',num:2,name:'熱田神宮',lat:35.1274,lng:136.9087,
+   addr:'愛知県名古屋市熱田区神宮1-1-1', hours:'境内自由（宝物館9:00–16:30）', fee:'免费',
+   photo:'photos/N2.jpg',
+   wiki:'Atsuta Shrine Nagoya',
+   hist:'传说供奉三神器之一的草薙剑，创建逾1900年。境内古木参天，年参拜超千万，是日本最古老的神宫之一。',
+   near:'名铁「神宫前」站步行约3分钟，JR「熱田」站步行约8分钟。'},
+  {id:'N3',cat:'nagoya',num:3,name:'大須商店街',lat:35.1627,lng:136.9017,
+   addr:'愛知県名古屋市中区大須', hours:'店铺约11:00–20:00', fee:'免费',
+   photo:'photos/N3.jpg',
+   wiki:'Osu shopping district Nagoya',
+   hist:'大阪级人气的全盖顶商店街，围绕大須観音展开。电器、古着、动漫与小吃林立，是名古屋最热闹的下町。',
+   near:'地铁鹤舞线「大須観音」站，与上前津、矢場町相连。'},
+  // 名古屋购物
+  {id:'SH1',cat:'shopping',num:1,name:'名鉄百貨店本店',lat:35.1704,lng:136.8825,
+   addr:'愛知県名古屋市中村区名駅1-2-1', hours:'10:00–20:00', fee:'—',
+   wiki:'Meitetsu Department Store Nagoya',
+   hist:'名古屋站直连的老牌百货，9层卖场涵盖时装、化妆品与地下食品街。负一楼"百货地下"是买伴手礼的热门地。',
+   near:'名古屋站直达，与JR高島屋、ミッドランドスクエア相邻。'},
+  {id:'SH2',cat:'shopping',num:2,name:'松坂屋名古屋店',lat:35.1697,lng:136.9050,
+   addr:'愛知県名古屋市中区栄3-16-1', hours:'10:00–19:30', fee:'—',
+   wiki:'Matsuzakaya Nagoya department store',
+   hist:'创业于1611年的日本最古百货品牌之一，名古屋本店是栄商圈地标。南北两馆连廊相接，地下食品街丰富。',
+   near:'地铁「栄」站步行3分钟，紧邻LACHIC与栄地下街。'},
+  {id:'SH3',cat:'shopping',num:3,name:'ミッドランドスクエア',lat:35.1713,lng:136.8829,
+   addr:'愛知県名古屋市中村区名駅4-7-1', hours:'店铺11:00–21:00/餐饮至23:00', fee:'—',
+   wiki:'Midland Square Nagoya',
+   hist:'名古屋站前最高层商业复合设施，集结潮流品牌与餐厅。45楼观景台可俯瞰名古屋全景，是购物+夜景一站地。',
+   near:'名古屋站步行3分钟，与名鉄百貨店相邻。'},
+  {id:'SH4',cat:'shopping',num:4,name:'栄地下街',lat:35.1680,lng:136.9062,
+   addr:'愛知県名古屋市中区栄（地下）', hours:'10:00–21:00', fee:'—',
+   wiki:'Sakae underground shopping mall Nagoya',
+   hist:'栄地区三大地下街之一，总长约1公里，连接地铁栄站与久屋大通站。服饰、杂货、咖啡馆密集，雨天也能愉快购物。',
+   near:'地铁「栄」站直达，与松坂屋、大須商店街形成购物三角。'},
+
+  // 周边参考
+  {id:'R1',cat:'ref',num:1,name:'浓飞巴士中心',lat:36.1400,lng:137.2538,
+   addr:'岐阜県高山市昭和町', hours:'依班次', fee:'—',
+   wiki:'Takayama Nohi Bus Terminal',
+   hist:'高山站前的巴士总站，前往白川乡、平湯温泉、新穗高方向的高速/路线巴士枢纽。是高山→白川乡巡游的交通起点。',
+   near:'JR高山站站前，与东急STAY结之汤相邻。'},
+  {id:'R2',cat:'ref',num:2,name:'飛騨古川まつり会館',lat:36.2060,lng:137.1765,
+   addr:'岐阜県飛騨市古川町', hours:'9:00–17:00', fee:'成人500円',
+   wiki:'Furukawa Festival Hall Hida',
+   hist:'展示"古川祭"（飞驒三社祭之一）屋台与"起こし"太鼓的会馆。古川祭被列为重要无形民俗文化财。',
+   near:'古川站步行约3分钟，与飛騨市図書館相邻。'},
+];
+
+// ---------- 路线 ----------
+const TRIP_ROUTE = ['N1','H1','H2','S1','K1'];   // 名古屋→下吕→高山→白川乡→金泽
+const ANIME_ROUTE = ['A1','A2','A3','A4','A5','A6','A7'];
+
+// ---------- 地图初始化 ----------
+const map = L.map('map', {zoomControl:true, tap:true}).setView([36.0, 137.1], 9);
+
+// 多底图源 —— 手机在国内也能加载
+const baseLayers = {};
+
+// 1. OSM 标准底图（全球通用）
+baseLayers['OpenStreetMap'] = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  subdomains:'abc', maxZoom:19,
+  attribution:'&copy; OpenStreetMap'
+});
+
+// 2. CARTO Voyager（苹果探索风格）
+baseLayers['CARTO 探索风'] = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  subdomains:'abcd', maxZoom:19,
+  attribution:'&copy; OpenStreetMap &copy; CARTO'
+});
+
+// 3. 高德地图（国内速度快）
+baseLayers['高德地图'] = L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+  subdomains:['1','2','3','4'], maxZoom:18,
+  attribution:'&copy; AutoNavi'
+});
+
+// 默认底图：优先 CARTO，如果加载失败会提示切换
+let currentBase = baseLayers['CARTO 探索风'].addTo(map);
+
+// 图层切换器
+L.control.layers(baseLayers, null, {position:'topright', collapsed:true}).addTo(map);
+
+// 监听底图切换
+map.on('baselayerchange', function(e){
+  currentBase = e.layer;
+  hideTileHint();
+});
+
+// 瓦片加载失败检测
+let tileLoadFailCount = 0;
+let tileLoadTotal = 0;
+map.on('tileerror', function(){
+  tileLoadFailCount++;
+  tileLoadTotal++;
+  if(tileLoadFailCount >= 3){
+    showTileHint();
+  }
+});
+map.on('tileload', function(){
+  tileLoadTotal++;
+});
+function showTileHint(){
+  const el = document.getElementById('tileHint');
+  if(el) el.style.display = 'block';
+}
+function hideTileHint(){
+  const el = document.getElementById('tileHint');
+  if(el) el.style.display = 'none';
+}
+
+const imgCache = {};   // id -> 图片URL
+const markers = {};    // id -> marker
+
+function badgeHTML(spot){
+  return `<span class="badge" style="background:${CATS[spot.cat].color}">${spot.id}</span>`;
+}
+function iconHTML(spot){
+  return L.divIcon({
+    className:'', html:`<div style="width:30px;height:30px;border-radius:50%;background:${CATS[spot.cat].color};color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)">${spot.id}</div>`,
+    iconSize:[30,30], iconAnchor:[15,15]
+  });
+}
+function popupHTML(spot){
+  const imgSrc = spot.photo || imgCache[spot.id];
+  const img = imgSrc
+    ? `<img src="${imgSrc}" alt="${spot.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="pop-img-ph" style="display:none">${CATS[spot.cat].icon}</div>`
+    : `<div class="pop-img-ph">${CATS[spot.cat].icon}</div>`;
+  return `<div class="pop">
+    ${img}
+    <div class="pt">${spot.name} ${badgeHTML(spot)}</div>
+    <div class="row"><b>地址</b>：${spot.addr}</div>
+    <div class="row"><b>时间</b>：${spot.hours}</div>
+    <div class="row"><b>门票</b>：${spot.fee}</div>
+    <div class="hist">${spot.hist}</div>
+    <div class="near">📍 周边参考：${spot.near}</div>
+  </div>`;
+}
+
+// 标记
+SPOTS.forEach(s=>{
+  const m = L.marker([s.lat,s.lng],{icon:iconHTML(s)}).addTo(map);
+  m.on('click', ()=>{ m.bindPopup(popupHTML(s)).openPopup(); });
+  markers[s.id]=m;
+});
+
+// 路线
+function buildPolyline(ids, color, dash){
+  const pts = ids.map(id=>{const s=SPOTS.find(x=>x.id===id);return [s.lat,s.lng];});
+  return L.polyline(pts,{color:color, weight:4, opacity:.85, dashArray:dash, lineJoin:'round'});
+}
+const tripLine = buildPolyline(TRIP_ROUTE, '#F59E0B', null).addTo(map);
+const animeLine = buildPolyline(ANIME_ROUTE, '#7C3AED', '8,7').addTo(map);
+
+// ---------- 侧栏 ----------
+function buildLegend(){
+  const el = document.getElementById('legend');
+  el.innerHTML = Object.values(CATS).map(c=>
+    `<span class="lg"><span class="d" style="background:${c.color}"></span>${c.icon} ${c.name}</span>`).join('');
+}
+function buildFilters(){
+  const el = document.getElementById('filters');
+  el.innerHTML = Object.entries(CATS).map(([k,c])=>
+    `<span class="chip" data-cat="${k}" style="border-color:${c.color}">${c.icon} ${c.name}</span>`).join('');
+  el.querySelectorAll('.chip').forEach(ch=>{
+    ch.onclick=()=>{
+      ch.classList.toggle('off');
+      const cat=ch.dataset.cat, on=!ch.classList.contains('off');
+      SPOTS.filter(s=>s.cat===cat).forEach(s=>{
+        if(on){ if(!map.hasLayer(markers[s.id])) markers[s.id].addTo(map);}
+        else { if(map.hasLayer(markers[s.id])) map.removeLayer(markers[s.id]); }
+      });
+    };
+  });
+}
+function buildList(){
+  const list = document.getElementById('list');
+  list.innerHTML='';
+  const TEXT_CATS = ['anime','shopping']; // 这两类用纯文字靠左，不放预览图
+  Object.entries(CATS).forEach(([k,c])=>{
+    const items = SPOTS.filter(s=>s.cat===k);
+    if(!items.length) return;
+    list.insertAdjacentHTML('beforeend', `<div class="group-title" style="color:${c.color}">${c.icon} ${c.name}</div>`);
+    if(TEXT_CATS.includes(k)){
+      // 纯文字列表，靠左无缩略图
+      items.forEach(s=>{
+        const div = document.createElement('div');
+        div.className='text-item';
+        div.innerHTML = `<span class="ti-id" style="background:${c.color}">${s.id}</span><span class="ti-name">${s.name}</span><div class="ti-meta">${s.addr}</div>`;
+        div.onclick=()=>{
+          focusSpot(s.id);
+          if(window.innerWidth <= 760) collapseSidebar();
+        };
+        list.appendChild(div);
+      });
+    } else {
+      // 带缩略图的卡片列表
+      items.forEach(s=>{
+        const thumbSrc = s.photo || imgCache[s.id];
+        const thumb = thumbSrc
+          ? `<div class="thumb"><img src="${thumbSrc}" alt="" loading="lazy" onerror="imgFail(this,'${CATS[s.cat].icon}')"></div>`
+          : `<div class="thumb"><div class="thumb-ph">${CATS[s.cat].icon}</div></div>`;
+        const div = document.createElement('div');
+        div.className='card';
+        div.innerHTML = `${thumb}
+          <div class="info">
+            <div class="nm">${badgeHTML(s)} ${s.name}</div>
+            <div class="meta">${s.addr}</div>
+            <div class="hist">${s.hist}</div>
+          </div>`;
+        div.onclick=()=>{
+          focusSpot(s.id);
+          if(window.innerWidth <= 760) collapseSidebar();
+        };
+        list.appendChild(div);
+      });
+    }
+  });
+  document.getElementById('cnt').textContent = SPOTS.length;
+}
+function focusSpot(id){
+  const s = SPOTS.find(x=>x.id===id); if(!s) return;
+  map.flyTo([s.lat,s.lng], 15, {duration:.8});
+  const m = markers[id];
+  if(!map.hasLayer(m)) m.addTo(map);
+  m.bindPopup(popupHTML(s)).openPopup();
+}
+
+// ---------- 侧栏收缩 ----------
+const sidebar = document.getElementById('sidebar');
+const sideOpen = document.getElementById('sideOpen');
+const sideClose = document.getElementById('side-close');
+function collapseSidebar(){ sidebar.classList.add('collapsed'); sideOpen.style.display='flex'; }
+function expandSidebar(){ sidebar.classList.remove('collapsed'); if(window.innerWidth > 760) sideOpen.style.display='none'; }
+sideClose.onclick = collapseSidebar;
+sideOpen.onclick = expandSidebar;
+
+// 手机端默认收起侧栏
+if(window.innerWidth <= 760){ collapseSidebar(); }
+
+// ---------- 控件 ----------
+document.getElementById('bTrip').onclick=()=>{
+  const b=document.getElementById('bTrip');
+  if(map.hasLayer(tripLine)){map.removeLayer(tripLine);b.classList.remove('active');}
+  else{tripLine.addTo(map);b.classList.add('active');}
+};
+document.getElementById('bAni').onclick=()=>{
+  const b=document.getElementById('bAni');
+  if(map.hasLayer(animeLine)){map.removeLayer(animeLine);b.classList.remove('active');}
+  else{animeLine.addTo(map);b.classList.add('active');}
+};
+document.getElementById('bAll').onclick=()=>{
+  map.flyToBounds(L.latLngBounds(SPOTS.map(s=>[s.lat,s.lng])).pad(.12), {duration:.8});
+};
+
+// ---------- 客户端从 Wikimedia Commons 拉取真实预览图 ----------
+const BAD_IMG = /(\.svg|logo|flag|map|icon|coat|symbol|diagram|banner|stamp)/i;
+async function loadWikiImage(term){
+  const url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json'
+    + '&generator=search&gsrsearch=' + encodeURIComponent(term)
+    + '&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url|mime&iiurlwidth=640&origin=*';
+  try{
+    const res = await fetch(url);
+    const data = await res.json();
+    const pages = (data.query && data.query.pages) || {};
+    for(const k in pages){
+      const ii = pages[k].imageinfo; if(!ii) continue;
+      const info = ii[0]; const title = pages[k].title||'';
+      if(['image/jpeg','image/png'].includes(info.mime) && !BAD_IMG.test(title)){
+        return info.thumburl || info.url;
+      }
+    }
+  }catch(e){}
+  return null;
+}
+function imgFail(el, emo){
+  el.style.display='none';
+  const d = document.createElement('div');
+  d.className='thumb-ph'; d.textContent = emo || '🏷';
+  el.parentNode.appendChild(d);
+}
+async function preloadImages(){
+  // 有本地实拍图的景点直接用本地图，跳过API请求
+  const needWiki = SPOTS.filter(s => !s.photo);
+  for(const s of needWiki){
+    let u = await loadWikiImage(s.wiki);
+    if(!u && s.wiki2) u = await loadWikiImage(s.wiki2);
+    if(!u) u = await loadWikiImage(s.name);
+    if(u) imgCache[s.id] = u;
+  }
+  const ld = document.getElementById('loading'); if(ld) ld.style.display='none';
+  buildList(); // 图片就位后刷新侧栏缩略图
+}
+
+// ---------- 启动 ----------
+buildLegend();
+buildFilters();
+buildList();
+preloadImages();
+</script>
+</body>
+</html>
