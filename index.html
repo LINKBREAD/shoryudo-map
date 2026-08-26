@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>日本升龙道 枫叶季 巡礼地图</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin>
+<link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin>
+<link rel="dns-prefetch" href="https://commons.wikimedia.org">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -190,6 +194,7 @@ const SPOTS = [
   // 你的名字·圣地巡礼
   {id:'A1',cat:'anime',num:1,name:'飛騨山王宫日枝神社',lat:36.1438,lng:137.2508,
    addr:'岐阜県高山市山王町', hours:'自由参拜', fee:'免费',
+   photo:'photos/A1.jpg',
    wiki:'Hida Sanno Hie Shrine',
    hist:'《你的名字。》中"宫水神社"的主要原型。红色楼门与石阶参道、被山林环抱的氛围与片中高度吻合，是圣地巡礼第一站。',
    near:'位于高山市内西部山手，从三町筋步行约10分钟上山。'},
@@ -471,11 +476,13 @@ function buildList(){
         list.appendChild(div);
       });
     } else {
-      // 带缩略图的卡片列表
+      // 带缩略图的卡片列表（本地图片用thumbs/小图，出错时回退原图，再回退占位图标）
       items.forEach(s=>{
         const thumbSrc = s.photo || imgCache[s.id];
+        const thumbFile = thumbSrc && thumbSrc.indexOf('photos/') === 0
+          ? thumbSrc.replace('photos/','thumbs/') : thumbSrc;
         const thumb = thumbSrc
-          ? `<div class="thumb"><img src="${thumbSrc}" alt="" loading="lazy" onerror="imgFail(this,'${CATS[s.cat].icon}')"></div>`
+          ? `<div class="thumb"><img src="${thumbFile}" alt="" loading="lazy" data-full="${thumbSrc}" onerror="if(this.dataset.f){imgFail(this,'${CATS[s.cat].icon}')}else{this.dataset.f=1;this.src=this.dataset.full}"></div>`
           : `<div class="thumb"><div class="thumb-ph">${CATS[s.cat].icon}</div></div>`;
         const div = document.createElement('div');
         div.className='card';
@@ -530,14 +537,16 @@ document.getElementById('bAll').onclick=()=>{
   map.flyToBounds(L.latLngBounds(SPOTS.map(s=>[s.lat,s.lng])).pad(.12), {duration:.8});
 };
 
-// ---------- 客户端从 Wikimedia Commons 拉取真实预览图 ----------
+// ---------- 客户端从 Wikimedia Commons 拉取真实预览图（并行+超时，不阻塞页面） ----------
 const BAD_IMG = /(\.svg|logo|flag|map|icon|coat|symbol|diagram|banner|stamp)/i;
 async function loadWikiImage(term){
   const url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json'
     + '&generator=search&gsrsearch=' + encodeURIComponent(term)
     + '&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url|mime&iiurlwidth=640&origin=*';
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), 4000);
   try{
-    const res = await fetch(url);
+    const res = await fetch(url, {signal: ctrl.signal});
     const data = await res.json();
     const pages = (data.query && data.query.pages) || {};
     for(const k in pages){
@@ -548,6 +557,7 @@ async function loadWikiImage(term){
       }
     }
   }catch(e){}
+  finally{ clearTimeout(timer); }
   return null;
 }
 function imgFail(el, emo){
@@ -557,14 +567,15 @@ function imgFail(el, emo){
   el.parentNode.appendChild(d);
 }
 async function preloadImages(){
-  // 有本地实拍图的景点直接用本地图，跳过API请求
+  // 有本地实拍图的景点直接用本地图，跳过API请求；其余并行请求维基图
   const needWiki = SPOTS.filter(s => !s.photo);
-  for(const s of needWiki){
+  const results = await Promise.all(needWiki.map(async s => {
     let u = await loadWikiImage(s.wiki);
     if(!u && s.wiki2) u = await loadWikiImage(s.wiki2);
     if(!u) u = await loadWikiImage(s.name);
-    if(u) imgCache[s.id] = u;
-  }
+    return [s.id, u];
+  }));
+  results.forEach(([id, u]) => { if(u) imgCache[id] = u; });
   const ld = document.getElementById('loading'); if(ld) ld.style.display='none';
   buildList(); // 图片就位后刷新侧栏缩略图
 }
