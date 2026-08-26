@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>日本升龙道 枫叶季 巡礼地图</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍁</text></svg>">
+<meta name="theme-color" content="#E63946">
+<meta name="description" content="名古屋-下吕-高山-白川乡-金泽 升龙道枫叶季巡礼地图，含行程、交通方式与实拍照片">
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin>
 <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin>
@@ -68,6 +72,23 @@
   .pop .row b{color:#222}
   .pop .hist{font-size:12px;color:#444;line-height:1.55;margin-top:6px}
   .pop .near{font-size:11.5px;color:#0b6; background:#eafaf1;border-radius:8px;padding:6px 8px;margin-top:7px;line-height:1.5}
+  .pop .tip{font-size:11.5px;color:#1d4ed8;background:#eff6ff;border-radius:8px;padding:6px 8px;margin-top:6px;line-height:1.5}
+  .pop .pt .tt{font-size:19px}
+
+  /* 行程安排面板 */
+  #itinerary{border-bottom:1px solid var(--line);max-height:46%;overflow-y:auto}
+  #itinerary summary{cursor:pointer;padding:10px 16px;font-size:13px;font-weight:700;color:#c2410c;user-select:none;list-style:none;display:flex;align-items:center;gap:6px}
+  #itinerary summary::-webkit-details-marker{display:none}
+  #itinerary summary::after{content:'▾';margin-left:auto;color:#999;font-size:11px}
+  #itinerary[open] summary::after{content:'▴'}
+  .it-day{padding:7px 14px;border-top:1px dashed #f2ddcb;cursor:pointer;transition:background .12s}
+  .it-day:hover{background:#fdf5ef}
+  .it-day .it-t{font-size:12.5px;font-weight:700;color:#9a3412}
+  .it-day .it-c{font-size:11.5px;color:#444;line-height:1.5;margin-top:2px}
+  .it-day .it-tags{margin-top:4px;display:flex;flex-wrap:wrap;gap:4px}
+  .it-move{font-size:10.5px;color:#b45309;background:#fff7ed;border-radius:6px;padding:2px 7px}
+  .it-h{font-size:10.5px;color:#0b6;background:#eafaf1;border-radius:6px;padding:2px 7px}
+  .it-day .hint{font-size:10px;color:#999;margin-top:2px}
 
   /* 侧栏开关按钮 */
   #sideOpen{position:absolute;top:12px;left:12px;z-index:999;width:42px;height:42px;border:none;background:#fff;border-radius:10px;font-size:20px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.18);display:none;align-items:center;justify-content:center;color:#333}
@@ -112,8 +133,46 @@
     </div>
     <div id="legend"></div>
     <div id="filters"></div>
+    <details id="itinerary" open>
+      <summary>🗓 行程安排 · 城际交通（点击天数可定位）</summary>
+      <div class="it-day" data-spots="H1">
+        <div class="it-t">D1 · 名古屋 → 下吕温泉</div>
+        <div class="it-c">抵达名古屋，乘 JR特急「ひだ」直达下吕。傍晚汤之街散步、泡足汤</div>
+        <div class="it-tags"><span class="it-move">🚄 特急ひだ 约2h40m</span><span class="it-h">🏨 宿 水明馆 H1</span></div>
+      </div>
+      <div class="it-day" data-spots="H2">
+        <div class="it-t">D2 · 下吕 → 高山</div>
+        <div class="it-c">上午出发，午后游览高山陣屋 T1 · 三町筋 T2 · 宫川朝市 T3 · 飛騨国分寺 T4</div>
+        <div class="it-tags"><span class="it-move">🚄 特急ひだ 约50m</span><span class="it-h">🏨 宿 东急STAY H2</span></div>
+      </div>
+      <div class="it-day" data-spots="S1">
+        <div class="it-t">D3 · 高山 → 白川乡 → 金泽</div>
+        <div class="it-c">上午白川乡：合掌村 S1 · 展望台 S2 · 和田家 S3；午后巴士直达金泽</div>
+        <div class="it-tags"><span class="it-move">🚌 高山→白川乡 50m</span><span class="it-move">🚌 白川乡→金泽 1h50m</span><span class="it-h">🏨 宿 金泽日航 H3</span></div>
+      </div>
+      <div class="it-day" data-spots="K1">
+        <div class="it-t">D4 · 金泽一日</div>
+        <div class="it-c">兼六园 K1 · 金泽城 K2 · 21世纪美术馆 K3 · 东茶屋街 K4</div>
+        <div class="it-tags"><span class="it-h">🏨 宿 金泽日航 H3</span></div>
+      </div>
+      <div class="it-day" data-spots="H4">
+        <div class="it-t">D5 · 金泽 → 名古屋</div>
+        <div class="it-c">特急しらさぎ约3小时抵达；午后名古屋城 N1 · 熱田神宮 N2</div>
+        <div class="it-tags"><span class="it-move">🚄 しらさぎ 约3h</span><span class="it-h">🏨 宿 船酒店 H4</span></div>
+      </div>
+      <div class="it-day" data-spots="N3">
+        <div class="it-t">D6 · 名古屋购物 · 返程</div>
+        <div class="it-c">大須商店街 N3 · 名鉄百货 SH1 · 松坂屋 SH2 · 栄地下街 SH4 · MIDLAND SH3</div>
+        <div class="it-tags"><span class="it-move">✈️ 机场/返程</span></div>
+      </div>
+      <div class="it-day" data-spots="A2">
+        <div class="it-t">🎬 支线 · 巡礼半日（可插入 D2 下午）</div>
+        <div class="it-c">高山 A1 日枝神社 → JR约15分 → 飛騨古川 A2–A6 步行串联</div>
+        <div class="it-tags"><span class="it-move">🚃 JR高山本线 15m</span></div>
+      </div>
+    </details>
     <div id="list"></div>
-    <div class="foot">酒店顺序：下吕 → 高山 → 金泽 → 名古屋。<br>坐标为 WGS-84，可复制到 Google/Apple 地图导航。<br>如果地图空白，请点右上角图层按钮切换底图。</div>
+    <div class="foot">酒店顺序：下吕 → 高山 → 金泽 → 名古屋。<br>🟠 橙线为经典线路（点击线段看城际交通与耗时），🟣 紫虚线为巡礼路线。<br>坐标为 WGS-84，可复制到 Google/Apple 地图导航。地图空白时点右上角「图层」切换底图。</div>
   </aside>
   <div id="map"></div>
 </div>
@@ -329,31 +388,81 @@ const SPOTS = [
    near:'古川站步行约3分钟，与飛騨市図書館相邻。'},
 ];
 
+// ---------- 景点补充信息（停留时长 / 小贴士） ----------
+const SPOT_EXTRA = {
+  H1:{stay:'1晚', tip:'馆内可免费借浴衣；晚餐会席需在订房时选定，泉质以美肌著称。'},
+  H2:{stay:'2晚', tip:'大浴场开放至深夜；隔壁浓飞巴士中心可直接购白川乡车票。'},
+  H3:{stay:'2晚', tip:'前台有金泽观光地图；去东茶屋街乘Loop巴士（右环）最方便。'},
+  H4:{stay:'1–2晚', tip:'主楼地下通道直达JR名古屋站，雨天不湿身；退房后行李可寄存前台。'},
+  T1:{stay:'约1小时', tip:'门票含多语言导览手册；不要错过后院的草药庭院。'},
+  T2:{stay:'1–1.5小时', tip:'飞驒牛握寿司（炙烧）约500–800円/贯，多家店可比价试吃。'},
+  T3:{stay:'30–45分钟', tip:'7:00开市越早越热闹；多数摊位只收现金。'},
+  T4:{stay:'约30分钟', tip:'11月中旬银杏转金黄，与本堂同框最美；寺内还有大银杏树。'},
+  A1:{stay:'约30分钟', tip:'参道石阶约10分钟；夏季备驱蚊液，雨后石阶湿滑。'},
+  A2:{stay:'约15分钟', tip:'站前黄色站牌是经典机位；打卡后可顺路逛まつり会館。'},
+  A3:{stay:'约20分钟', tip:'馆内拍摄需在柜台申请许可，请保持安静。'},
+  A4:{stay:'约20分钟', tip:'留意境内"むすび（产灵）"绳结装饰，正是电影核心意象。'},
+  A5:{stay:'约30分钟', tip:'瀬戸川锦鲤成群，傍晚柔光下最出片。'},
+  A6:{stay:'约1小时', tip:'五平饼一份约300–500円；营业时间短，建议当午餐。'},
+  A7:{stay:'约15分钟', tip:'位于高山↔下吕区间，乘左侧车窗更容易看到。'},
+  S1:{stay:'2–3小时', tip:'行李可寄存在巴士站储物柜；村内多碎石路，穿好走的鞋。'},
+  S2:{stay:'约30分钟', tip:'清晨人少光柔最适合拍照；从村中心步行上山约15分钟。'},
+  S3:{stay:'30–45分钟', tip:'合掌造内部低矮、楼梯陡峭，大件行李不建议带入。'},
+  K1:{stay:'1.5–2小时', tip:'11月中旬–下旬红叶最佳；霞之池·唐崎松是定番机位。'},
+  K2:{stay:'约1小时', tip:'与兼六园桂坂口相邻，可一并游览；夜晚石墙点灯很美。'},
+  K3:{stay:'1–1.5小时', tip:'免费区的"泳池"可拍照但常排队；特展需另购票。'},
+  K4:{stay:'1–1.5小时', tip:'金箔冰淇淋约900円；傍晚茶屋点灯后氛围最佳。'},
+  N1:{stay:'1.5小时', tip:'本丸御殿木造复原极精致值得细看；西之丸庭园可拍天守同框。'},
+  N2:{stay:'约1小时', tip:'宝物馆需门票；参拜后尝一碗宫きしめん面。'},
+  N3:{stay:'1.5–2小时', tip:'古着店多在傍晚早关门；周末人流极大注意随身物品。'},
+  SH1:{stay:'1–2小时', tip:'地下食品街伴手礼最全，可办免税。'},
+  SH2:{stay:'1–2小时', tip:'地下食品街老铺和菓子值得买；与地铁栄站直连。'},
+  SH3:{stay:'1–2小时', tip:'45楼观景台看夜景顺路；餐饮层营业至深夜。'},
+  SH4:{stay:'约1小时', tip:'与地铁栄站直连，雨天购物首选。'},
+  R1:{stay:'—', tip:'白川乡车票红叶季务必提前1–2周在浓飞官网预约。'},
+  R2:{stay:'约30分钟', tip:'屋台展示密集，是雨天备选景点。'},
+};
+
 // ---------- 路线 ----------
-const TRIP_ROUTE = ['N1','H1','H2','S1','K1'];   // 名古屋→下吕→高山→白川乡→金泽
 const ANIME_ROUTE = ['A1','A2','A3','A4','A5','A6','A7'];
 
+// ---------- 城际交通分段（点击地图橙线段查看） ----------
+const SEGS = [
+  {ids:['N1','H1'], from:'名古屋', to:'下吕', mode:'🚄 JR特急「ひだ」', time:'约2小时40分', cost:'约6,500円',
+   note:'名古屋站直达下吕站，无需换乘；车票可在JR绿色窗口或SmartEX购买。'},
+  {ids:['H1','H2'], from:'下吕', to:'高山', mode:'🚄 JR特急「ひだ」/ 普通列车', time:'特急约50分 · 普通约1小时15分', cost:'特急约2,400円 · 普通约1,400円',
+   note:'沿飞驒川溪谷北上，左側车窗风景最佳；普通列车性价比高且班次不少。'},
+  {ids:['H2','S1'], from:'高山', to:'白川乡', mode:'🚌 浓飞高速巴士', time:'约50分钟', cost:'单程约2,600円',
+   note:'浓飞巴士中心（高山站旁）发车；红叶季务必提前1–2周官网预约。'},
+  {ids:['S1','K1'], from:'白川乡', to:'金泽', mode:'🚌 高速巴士（浓飞×北陆铁道）', time:'约1小时50分', cost:'单程约2,600円',
+   note:'需预约；沿途穿越白山山脉，秋季车窗风景绝佳。'},
+  {ids:['K1','H4'], from:'金泽', to:'名古屋', mode:'🚄 特急「しらさぎ」/ 新干线换乘', time:'しらさぎ约3小时 · 新干线经敦贺约2.5小时', cost:'约7,000–8,000円',
+   note:'しらさぎ金泽站直达名古屋站最省事；新干线需在敦贺换乘特急。'},
+];
+
 // ---------- 地图初始化 ----------
-const map = L.map('map', {zoomControl:true, tap:true}).setView([36.0, 137.1], 9);
+const map = L.map('map', {zoomControl:true, tap:true, zoomSnap:.5});
+map.fitBounds(L.latLngBounds(SPOTS.map(s=>[s.lat,s.lng])).pad(0.08));
+L.control.scale({imperial:false, position:'bottomleft'}).addTo(map);
 
 // 多底图源 —— 手机在国内也能加载
 const baseLayers = {};
 
 // 1. OSM 标准底图（全球通用）
 baseLayers['OpenStreetMap'] = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  subdomains:'abc', maxZoom:19,
+  subdomains:'abc', maxZoom:19, keepBuffer:2,
   attribution:'&copy; OpenStreetMap'
 });
 
 // 2. CARTO Voyager（苹果探索风格）
 baseLayers['CARTO 探索风'] = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-  subdomains:'abcd', maxZoom:19,
+  subdomains:'abcd', maxZoom:19, keepBuffer:2, updateWhenZooming:false,
   attribution:'&copy; OpenStreetMap &copy; CARTO'
 });
 
 // 3. 高德地图（国内速度快）
 baseLayers['高德地图'] = L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
-  subdomains:['1','2','3','4'], maxZoom:18,
+  subdomains:['1','2','3','4'], maxZoom:18, keepBuffer:2,
   attribution:'&copy; AutoNavi'
 });
 
@@ -405,6 +514,7 @@ function iconHTML(spot){
 }
 function popupHTML(spot){
   const imgSrc = spot.photo || imgCache[spot.id];
+  const extra = SPOT_EXTRA[spot.id] || {};
   const img = imgSrc
     ? `<img src="${imgSrc}" alt="${spot.name}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><div class="pop-img-ph" style="display:none">${CATS[spot.cat].icon}</div>`
     : `<div class="pop-img-ph">${CATS[spot.cat].icon}</div>`;
@@ -414,7 +524,9 @@ function popupHTML(spot){
     <div class="row"><b>地址</b>：${spot.addr}</div>
     <div class="row"><b>时间</b>：${spot.hours}</div>
     <div class="row"><b>门票</b>：${spot.fee}</div>
+    ${extra.stay?`<div class="row"><b>停留</b>：${extra.stay}</div>`:''}
     <div class="hist">${spot.hist}</div>
+    ${extra.tip?`<div class="tip">💡 ${extra.tip}</div>`:''}
     <div class="near">📍 周边参考：${spot.near}</div>
   </div>`;
 }
@@ -426,13 +538,52 @@ SPOTS.forEach(s=>{
   markers[s.id]=m;
 });
 
-// 路线
-function buildPolyline(ids, color, dash){
-  const pts = ids.map(id=>{const s=SPOTS.find(x=>x.id===id);return [s.lat,s.lng];});
-  return L.polyline(pts,{color:color, weight:4, opacity:.85, dashArray:dash, lineJoin:'round'});
+// 路线（分段含交通方式，点击线段弹窗）
+function segPopup(seg){
+  const a = SPOTS.find(x=>x.id===seg.ids[0]);
+  return `<div class="pop">
+    <div class="pt"><span class="tt">🧭</span> ${seg.from} → ${seg.to}</div>
+    <div class="row"><b>方式</b>：${seg.mode}</div>
+    <div class="row"><b>耗时</b>：${seg.time}</div>
+    <div class="row"><b>票价</b>：${seg.cost}</div>
+    <div class="hist">${seg.note}</div>
+    <div class="near">🎫 票价仅供参考，以官网/现场为准。两端标记：${a.name} 等。</div>
+  </div>`;
 }
-const tripLine = buildPolyline(TRIP_ROUTE, '#F59E0B', null).addTo(map);
-const animeLine = buildPolyline(ANIME_ROUTE, '#7C3AED', '8,7').addTo(map);
+function arrowMarker(a,b,color){
+  const mid=[(a.lat+b.lat)/2,(a.lng+b.lng)/2];
+  const ang=Math.atan2(b.lng-a.lng, b.lat-a.lat)*180/Math.PI;
+  return L.marker(mid,{interactive:false,icon:L.divIcon({className:'',iconSize:[16,16],iconAnchor:[8,8],
+    html:`<div style="transform:rotate(${ang}deg);color:${color};font-size:15px;font-weight:700;line-height:16px;text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff">➤</div>`})});
+}
+const tripGroup = L.layerGroup();
+SEGS.forEach(seg=>{
+  const a=SPOTS.find(x=>x.id===seg.ids[0]), b=SPOTS.find(x=>x.id===seg.ids[1]);
+  const line=L.polyline([[a.lat,a.lng],[b.lat,b.lng]],{color:'#F59E0B',weight:4,opacity:.85,lineJoin:'round'});
+  line.bindPopup(segPopup(seg));
+  tripGroup.addLayer(line);
+  tripGroup.addLayer(arrowMarker(a,b,'#F59E0B'));
+});
+tripGroup.addTo(map);
+
+const animeGroup = L.layerGroup();
+{
+  const pts = ANIME_ROUTE.map(id=>{const s=SPOTS.find(x=>x.id===id);return [s.lat,s.lng];});
+  const line=L.polyline(pts,{color:'#7C3AED',weight:4,opacity:.85,dashArray:'8,7',lineJoin:'round'});
+  line.bindPopup(`<div class="pop">
+    <div class="pt"><span class="tt">🟣</span> 你的名字 · 巡礼路线</div>
+    <div class="row"><b>高山</b>：A1 日枝神社（市内步行可达）</div>
+    <div class="row"><b>→ 飛騨古川</b>：JR高山本线约15分钟（约240円），A2–A6 步行串联</div>
+    <div class="row"><b>→ 萩原</b>：A7 踏切位于高山↔下吕沿线，乘车顺路可见</div>
+    <div class="near">💡 建议安排半日：高山出发 → 古川巡礼 → 返回高山。</div>
+  </div>`);
+  animeGroup.addLayer(line);
+  for(let i=0;i<ANIME_ROUTE.length-1;i++){
+    const a=SPOTS.find(x=>x.id===ANIME_ROUTE[i]), b=SPOTS.find(x=>x.id===ANIME_ROUTE[i+1]);
+    animeGroup.addLayer(arrowMarker(a,b,'#7C3AED'));
+  }
+}
+animeGroup.addTo(map);
 
 // ---------- 侧栏 ----------
 function buildLegend(){
@@ -525,13 +676,13 @@ if(window.innerWidth <= 760){ collapseSidebar(); }
 // ---------- 控件 ----------
 document.getElementById('bTrip').onclick=()=>{
   const b=document.getElementById('bTrip');
-  if(map.hasLayer(tripLine)){map.removeLayer(tripLine);b.classList.remove('active');}
-  else{tripLine.addTo(map);b.classList.add('active');}
+  if(map.hasLayer(tripGroup)){map.removeLayer(tripGroup);b.classList.remove('active');}
+  else{tripGroup.addTo(map);b.classList.add('active');}
 };
 document.getElementById('bAni').onclick=()=>{
   const b=document.getElementById('bAni');
-  if(map.hasLayer(animeLine)){map.removeLayer(animeLine);b.classList.remove('active');}
-  else{animeLine.addTo(map);b.classList.add('active');}
+  if(map.hasLayer(animeGroup)){map.removeLayer(animeGroup);b.classList.remove('active');}
+  else{animeGroup.addTo(map);b.classList.add('active');}
 };
 document.getElementById('bAll').onclick=()=>{
   map.flyToBounds(L.latLngBounds(SPOTS.map(s=>[s.lat,s.lng])).pad(.12), {duration:.8});
@@ -544,7 +695,7 @@ async function loadWikiImage(term){
     + '&generator=search&gsrsearch=' + encodeURIComponent(term)
     + '&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url|mime&iiurlwidth=640&origin=*';
   const ctrl = new AbortController();
-  const timer = setTimeout(()=>ctrl.abort(), 4000);
+  const timer = setTimeout(()=>ctrl.abort(), 3000);
   try{
     const res = await fetch(url, {signal: ctrl.signal});
     const data = await res.json();
@@ -585,6 +736,18 @@ buildLegend();
 buildFilters();
 buildList();
 preloadImages();
+
+// ---------- 行程面板交互 ----------
+document.querySelectorAll('.it-day').forEach(el=>{
+  el.addEventListener('click',()=>{
+    const ids=(el.dataset.spots||'').split(' ');
+    const pts=ids.map(i=>SPOTS.find(x=>x.id===i)).filter(Boolean).map(s=>[s.lat,s.lng]);
+    if(pts.length===1) map.flyTo(pts[0], 14, {duration:.8});
+    else if(pts.length) map.flyToBounds(L.latLngBounds(pts).pad(.6), {duration:.8});
+    if(window.innerWidth<=760) collapseSidebar();
+  });
+});
+if(window.innerWidth<=760) document.getElementById('itinerary').removeAttribute('open');
 </script>
 </body>
 </html>
