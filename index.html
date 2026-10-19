@@ -195,22 +195,22 @@
       <div class="it-day" data-spots="H1">
         <div class="it-t"><span class="dn">D1</span> 名古屋 → 下吕温泉</div>
         <div class="it-c">入境后直奔下吕。傍晚沿飞驒川逛汤之街，泡免费足汤</div>
-        <div class="it-tags"><span class="it-move">🚄 特急ひだ 约2h40m</span><span class="it-h">🏨 宿 水明馆 H1</span></div>
+        <div class="it-tags"><span class="it-move">🚄 特急ひだ 约2h40m</span><span class="it-h">🏨 宿 水明馆 H1 · 1晚</span></div>
       </div>
       <div class="it-day" data-spots="T1 T2 T3 T4">
         <div class="it-t"><span class="dn">D2</span> 下吕 → 高山老城</div>
         <div class="it-c">午后漫步高山：高山陣屋 · 三町筋 · 宫川朝市 · 飛驒国分寺</div>
-        <div class="it-tags"><span class="it-move">🚄 特急ひだ 约50m</span><span class="it-h">🏨 宿 东急STAY H2</span></div>
+        <div class="it-tags"><span class="it-move">🚄 特急ひだ 约50m</span><span class="it-h">🏨 宿 东急STAY H2 · 1晚</span></div>
       </div>
       <div class="it-day" data-spots="S1 S2 S3">
         <div class="it-t"><span class="dn">D3</span> 高山 → 白川乡 → 金泽</div>
         <div class="it-c">上午合掌村与展望台，午后巴士穿越白山山脉直达金泽</div>
-        <div class="it-tags"><span class="it-move">🚌 高山→白川乡 50m</span><span class="it-move">🚌 白川乡→金泽 1h50m</span><span class="it-h">🏨 宿 金泽日航 H3</span></div>
+        <div class="it-tags"><span class="it-move">🚌 高山→白川乡 50m</span><span class="it-move">🚌 白川乡→金泽 1h50m</span><span class="it-h">🏨 宿 金泽日航 H3 · 1晚</span></div>
       </div>
       <div class="it-day" data-spots="K1 K2 K3 K4">
         <div class="it-t"><span class="dn">D4</span> 金泽一日 → 傍晚赴名古屋</div>
         <div class="it-c">兼六园 · 金泽城 · 21世纪美术馆 · 东茶屋街，傍晚乘特急南下名古屋</div>
-        <div class="it-tags"><span class="it-move">🚄 しらさぎ 约3h</span><span class="it-h">🏨 宿 船酒店 H4</span></div>
+        <div class="it-tags"><span class="it-move">🚄 しらさぎ 约3h</span><span class="it-h">🏨 宿 船酒店 H4 · 1晚</span></div>
       </div>
       <div class="it-day" data-spots="N1 N2 N3 SH1 SH3 SH4">
         <div class="it-t"><span class="dn">D5</span> 名古屋市区 → 返程浦东</div>
@@ -225,7 +225,7 @@
     </details>
     <div id="list"></div>
     <div class="foot">
-      <b>酒店顺序</b>：下吕 → 高山 → 金泽 → 名古屋<br>
+      <b>住宿</b>：4家酒店<b>各住1晚</b>（下吕 → 高山 → 金泽 → 名古屋）<br>
       <b>线路</b>：<span style="color:#F59E0B;font-weight:700">━</span> 经典线路（点线段看交通）<span style="color:#7C3AED;font-weight:700">┅</span> 巡礼路线<br>
       <b>导航</b>：弹窗内点「复制坐标」，可粘贴到 Google / Apple 地图<br>
       地图空白时点右上角「🗺」切换底图
@@ -245,7 +245,7 @@
 <script>
 // ---------- 分类定义 ----------
 const CATS = {
-  hotel:    {name:'我的酒店',     color:'#F4A300', icon:'🏨'},
+  hotel:    {name:'我的酒店 · 各1晚', color:'#F4A300', icon:'🏨'},
   tourist:  {name:'高山必去景点', color:'#E63946', icon:'🏯'},
   anime:    {name:'你的名字·圣地巡礼', color:'#7C3AED', icon:'🎬'},
   shira:    {name:'白川乡',       color:'#0E9594', icon:'🏡'},
@@ -268,7 +268,7 @@ const SPOTS = [
    addr:'岐阜県高山市花里町4-301', hours:'入住15:00/退房11:00', fee:'—',
    photo:'photos/H2.jpg',
    wiki:'Hida Takayama', wiki2:'Takayama Gifu',
-   hist:'2020年开业的都市型温泉酒店，紧邻JR高山站（步行约2分钟）。顶楼设足汤、2楼为温泉大浴场，客房内配洗衣机与微波炉，适合连住型旅行。',
+   hist:'2020年开业的都市型温泉酒店，紧邻JR高山站（步行约2分钟）。顶楼设足汤、2楼为温泉大浴场，客房内配洗衣机与微波炉，只住一晚也能泡汤洗衣，很适合作为高山与白川乡之间的中转宿点。',
    near:'紧邻浓飞巴士中心与宫川，去白川乡、新穗高的巴士在此发车。'},
   {id:'H3',cat:'hotel',num:3,name:'金泽日航酒店',lat:36.5768,lng:136.6512,
    addr:'石川県金沢市本町2-15-1', hours:'入住15:00/退房12:00', fee:'—',
@@ -448,10 +448,10 @@ const SPOTS = [
 
 // ---------- 景点补充信息（停留时长 / 小贴士） ----------
 const SPOT_EXTRA = {
-  H1:{stay:'1晚', tip:'馆内可免费借浴衣；晚餐会席需在订房时选定，泉质以美肌著称。'},
-  H2:{stay:'2晚', tip:'大浴场开放至深夜；隔壁浓飞巴士中心可直接购白川乡车票。'},
-  H3:{stay:'2晚', tip:'前台有金泽观光地图；去东茶屋街乘Loop巴士（右环）最方便。'},
-  H4:{stay:'1–2晚', tip:'主楼地下通道直达JR名古屋站，雨天不湿身；退房后行李可寄存前台。'},
+  H1:{stay:'1晚 · D1', tip:'馆内可免费借浴衣；晚餐会席需在订房时选定，泉质以美肌著称。次早退房后乘特急ひだ前往高山。'},
+  H2:{stay:'1晚 · D2', tip:'大浴场开放至深夜；隔壁浓飞巴士中心可直接购白川乡车票，次早在此上车。'},
+  H3:{stay:'1晚 · D3', tip:'前台有金泽观光地图；去东茶屋街乘Loop巴士（右环）最方便。行李可先寄存再逛。'},
+  H4:{stay:'1晚 · D4', tip:'主楼地下通道直达JR名古屋站，雨天不湿身；退房后行李可寄存前台，轻装逛完再取。'},
   T1:{stay:'约1小时', tip:'门票含多语言导览手册；不要错过后院的草药庭院。'},
   T2:{stay:'1–1.5小时', tip:'飞驒牛握寿司（炙烧）约500–800円/贯，多家店可比价试吃。'},
   T3:{stay:'30–45分钟', tip:'7:00开市越早越热闹；多数摊位只收现金。'},
@@ -627,6 +627,11 @@ function iconHTML(spot){
     iconSize:[32,32], iconAnchor:[16,16], popupAnchor:[0,-16]
   });
 }
+// 停留时长文案：酒店显示「住宿 N晚 · Dx」，景点显示「建议停留 X」
+function stayLine(spot, extra){
+  if(!extra.stay || extra.stay === '—') return '';
+  return spot.cat === 'hotel' ? ' · 住宿 ' + extra.stay : ' · 建议停留 ' + extra.stay;
+}
 function popupHTML(spot){
   const c = CATS[spot.cat];
   const imgSrc = spot.photo || imgCache[spot.id];
@@ -638,7 +643,7 @@ function popupHTML(spot){
   return `<div class="pop">
     <div class="pop-hd">
       <div class="t">${c.icon} ${spot.name} ${badgeHTML(spot, true)}</div>
-      <div class="s">${c.name}${extra.stay ? ' · 建议停留 ' + extra.stay : ''}</div>
+      <div class="s">${c.name}${stayLine(spot, extra)}</div>
     </div>
     <div class="pop-bd">
       ${img}
@@ -756,7 +761,7 @@ function buildList(){
           ? `<div class="thumb"><img src="${thumbFile}" width="78" height="60" alt="" loading="lazy" decoding="async" data-full="${thumbSrc}" onerror="if(this.dataset.f){imgFail(this,'${CATS[s.cat].icon}')}else{this.dataset.f=1;this.src=this.dataset.full}"></div>`
           : `<div class="thumb"><div class="thumb-ph">${CATS[s.cat].icon}</div></div>`;
         const ex = SPOT_EXTRA[s.id] || {};
-        const stayTag = (ex.stay && ex.stay !== '—') ? `<span class="stay">⏱ ${ex.stay}</span>` : '';
+        const stayTag = (ex.stay && ex.stay !== '—') ? `<span class="stay">${s.cat==='hotel'?'🏨':'⏱'} ${ex.stay}</span>` : '';
         const div = document.createElement('div');
         div.className='card';
         div.innerHTML = `${thumb}
