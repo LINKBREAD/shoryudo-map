@@ -7,11 +7,8 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍁</text></svg>">
 <meta name="theme-color" content="#E63946">
 <meta name="description" content="名古屋-下吕-高山-白川乡-金泽 升龙道枫叶季巡礼地图，含行程、交通方式与实拍照片">
-<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin>
-<link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin>
-<link rel="dns-prefetch" href="https://commons.wikimedia.org">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="preconnect" href="https://server.arcgisonline.com" crossorigin>
+<link rel="stylesheet" href="leaflet.css"/>
 <style>
   :root{
     --hotel:#F4A300; --tourist:#E63946; --anime:#7C3AED;
@@ -97,7 +94,6 @@
   .ctrl{position:absolute;top:12px;right:12px;z-index:1000;display:flex;flex-direction:column;gap:8px}
   .ctrl button{background:#fff;border:1px solid #d6dae1;border-radius:10px;padding:8px 12px;font-size:13px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.12);color:#222}
   .ctrl button.active{background:#2563eb;color:#fff;border-color:#2563eb}
-  .loading{position:absolute;left:50%;top:14px;transform:translateX(-50%);z-index:1000;background:#fff;border:1px solid #e5e7eb;border-radius:999px;padding:6px 14px;font-size:12px;color:#555;box-shadow:0 1px 4px rgba(0,0,0,.12)}
   .foot{font-size:10.5px;color:var(--muted);padding:8px 16px;border-top:1px solid var(--line);line-height:1.5}
 
   /* 瓦片加载失败提示 */
@@ -164,7 +160,7 @@
       </div>
     </details>
     <div id="list"></div>
-    <div class="foot">酒店顺序：下吕 → 高山 → 金泽 → 名古屋。<br>🟠 橙线为经典线路（点击线段看城际交通与耗时），🟣 紫虚线为巡礼路线。<br>坐标为 WGS-84，可复制到 Google/Apple 地图导航。地图空白时点右上角「图层」切换底图。</div>
+    <div class="foot">酒店顺序：下吕 → 高山 → 金泽 → 名古屋。<br>🟠 橙线为经典线路（点击线段看城际交通与耗时），🟣 紫虚线为巡礼路线。<br>坐标为 WGS-84，可复制到 Google/Apple 地图导航。地图空白时点右上角「🗺」切换底图。</div>
   </aside>
   <div id="map"></div>
 </div>
@@ -173,10 +169,9 @@
   <button id="bAni" class="active">🟣 巡礼路线</button>
   <button id="bAll">🔍 显示全部</button>
 </div>
-<div class="loading" id="loading">正在加载部分预览图…</div>
-<div id="tileHint">底图加载失败？请点右上角「图层」按钮切换其他底图</div>
+<div id="tileHint">底图加载不畅？请点右上角「🗺」按钮切换其他底图</div>
 
-<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="leaflet.js"></script>
 <script>
 // ---------- 分类定义 ----------
 const CATS = {
@@ -438,55 +433,85 @@ const map = L.map('map', {zoomControl:true, tap:true, zoomSnap:.5});
 map.fitBounds(L.latLngBounds(SPOTS.map(s=>[s.lat,s.lng])).pad(0.08));
 L.control.scale({imperial:false, position:'bottomleft'}).addTo(map);
 
-// 多底图源 —— 手机在国内也能加载
+// 多底图源 —— 全部免 API Key，全球覆盖
 const baseLayers = {};
 
-// 1. OSM 标准底图（全球通用）
-baseLayers['OpenStreetMap'] = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  subdomains:'abc', maxZoom:19, keepBuffer:2,
-  attribution:'&copy; OpenStreetMap'
+// 1. Esri 世界街道图（Akamai CDN，日本街道细节完整，默认）
+baseLayers['Esri 街道图'] = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom:18, keepBuffer:4, updateWhenZooming:false,
+  attribution:'&copy; Esri, HERE, Garmin, OpenStreetMap'
 });
 
-// 2. CARTO Voyager（苹果探索风格）
-baseLayers['CARTO 探索风'] = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-  subdomains:'abcd', maxZoom:19, keepBuffer:2, updateWhenZooming:false,
-  attribution:'&copy; OpenStreetMap &copy; CARTO'
+// 2. Esri 世界地形图（含等高线，适合看山谷地形）
+baseLayers['Esri 地形图'] = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom:18, keepBuffer:4, updateWhenZooming:false,
+  attribution:'&copy; Esri, HERE, Garmin, USGS'
 });
 
-// 3. 高德地图（国内速度快）
+// 3. Esri 卫星影像
+baseLayers['Esri 卫星图'] = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  maxZoom:18, keepBuffer:4, updateWhenZooming:false,
+  attribution:'&copy; Esri, Maxar, Earthstar Geographics'
+});
+
+// 4. 高德地图（国内访问快）
 baseLayers['高德地图'] = L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
-  subdomains:['1','2','3','4'], maxZoom:18, keepBuffer:2,
+  subdomains:['1','2','3','4'], maxZoom:18, keepBuffer:4,
   attribution:'&copy; AutoNavi'
 });
 
-// 默认底图：优先 CARTO，如果加载失败会提示切换
-let currentBase = baseLayers['CARTO 探索风'].addTo(map);
+// 5. OpenStreetMap（细节最全，国内较慢）
+baseLayers['OpenStreetMap'] = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom:19, keepBuffer:4,
+  attribution:'&copy; OpenStreetMap'
+});
+
+// 自动故障切换顺序
+const BASE_ORDER = ['Esri 街道图','Esri 地形图','高德地图','OpenStreetMap','Esri 卫星图'];
+let baseIdx = 0;
+
+// 默认底图
+let currentBase = baseLayers[BASE_ORDER[0]].addTo(map);
 
 // 图层切换器
-L.control.layers(baseLayers, null, {position:'topright', collapsed:true}).addTo(map);
+const layersCtrl = L.control.layers(baseLayers, null, {position:'topright', collapsed:true}).addTo(map);
 
 // 监听底图切换
 map.on('baselayerchange', function(e){
   currentBase = e.layer;
+  const k = Object.keys(baseLayers).find(n=>baseLayers[n]===e.layer);
+  if(k) baseIdx = BASE_ORDER.indexOf(k);
+  tileFail = 0; tileOk = 0; autoSwitching = false;
   hideTileHint();
 });
 
-// 瓦片加载失败检测
-let tileLoadFailCount = 0;
-let tileLoadTotal = 0;
+// 瓦片加载失败检测 + 自动切换底图
+let tileFail = 0;
+let tileOk = 0;
+let autoSwitching = false;
 map.on('tileerror', function(){
-  tileLoadFailCount++;
-  tileLoadTotal++;
-  if(tileLoadFailCount >= 3){
-    showTileHint();
+  tileFail++;
+  if(tileFail >= 4 && tileOk === 0 && !autoSwitching && baseIdx < BASE_ORDER.length - 1){
+    autoSwitching = true;
+    baseIdx++;
+    const next = BASE_ORDER[baseIdx];
+    map.removeLayer(currentBase);
+    currentBase = baseLayers[next].addTo(map);
+    currentBase.bringToBack && currentBase.bringToBack();
+    tileFail = 0; tileOk = 0;
+    showTileHint('当前底图加载不畅，已自动切换到「' + next + '」');
+    setTimeout(()=>{ autoSwitching = false; hideTileHint(); }, 3500);
+  } else if(tileFail >= 6 && tileOk === 0){
+    showTileHint('底图加载失败？请点右上角「🗺」按钮切换其他底图');
   }
 });
 map.on('tileload', function(){
-  tileLoadTotal++;
+  tileOk++;
+  if(tileOk > 3 && tileFail > 0) tileFail = 0;
 });
-function showTileHint(){
+function showTileHint(msg){
   const el = document.getElementById('tileHint');
-  if(el) el.style.display = 'block';
+  if(el){ el.textContent = msg || '底图加载失败？请点右上角「🗺」按钮切换其他底图'; el.style.display = 'block'; }
 }
 function hideTileHint(){
   const el = document.getElementById('tileHint');
@@ -527,7 +552,7 @@ function popupHTML(spot){
 // 标记
 SPOTS.forEach(s=>{
   const m = L.marker([s.lat,s.lng],{icon:iconHTML(s)}).addTo(map);
-  m.on('click', ()=>{ m.bindPopup(popupHTML(s)).openPopup(); });
+  m.on('click', ()=>{ m.bindPopup(popupHTML(s)).openPopup(); lazyWikiImage(s, m); });
   markers[s.id]=m;
 });
 
@@ -640,6 +665,7 @@ function focusSpot(id){
   const m = markers[id];
   if(!map.hasLayer(m)) m.addTo(map);
   m.bindPopup(popupHTML(s)).openPopup();
+  lazyWikiImage(s, m);
 }
 
 // ---------- 侧栏收缩 ----------
@@ -669,14 +695,15 @@ document.getElementById('bAll').onclick=()=>{
   map.flyToBounds(L.latLngBounds(SPOTS.map(s=>[s.lat,s.lng])).pad(.12), {duration:.8});
 };
 
-// ---------- 客户端从 Wikimedia Commons 拉取真实预览图（并行+超时，不阻塞页面） ----------
+// ---------- 按需从 Wikimedia Commons 拉取预览图（仅点击时触发，不拖慢首屏） ----------
 const BAD_IMG = /(\.svg|logo|flag|map|icon|coat|symbol|diagram|banner|stamp)/i;
 async function loadWikiImage(term){
+  if(!term) return null;
   const url = 'https://commons.wikimedia.org/w/api.php?action=query&format=json'
     + '&generator=search&gsrsearch=' + encodeURIComponent(term)
     + '&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url|mime&iiurlwidth=640&origin=*';
   const ctrl = new AbortController();
-  const timer = setTimeout(()=>ctrl.abort(), 3000);
+  const timer = setTimeout(()=>ctrl.abort(), 2500);
   try{
     const res = await fetch(url, {signal: ctrl.signal});
     const data = await res.json();
@@ -692,29 +719,31 @@ async function loadWikiImage(term){
   finally{ clearTimeout(timer); }
   return null;
 }
+const wikiPending = {};
+// 点击某个无本地图的景点后，再静默补齐维基图
+async function lazyWikiImage(s, marker){
+  if(s.photo || imgCache[s.id] || wikiPending[s.id]) return;
+  wikiPending[s.id] = 1;
+  let u = null;
+  try{
+    u = await loadWikiImage(s.wiki);
+    if(!u && s.wiki2) u = await loadWikiImage(s.wiki2);
+    if(!u) u = await loadWikiImage(s.name);
+  }catch(e){}
+  if(u){
+    imgCache[s.id] = u;
+    if(marker && marker.isPopupOpen()){ marker.setPopupContent(popupHTML(s)); }
+  }
+}
 function imgFail(el, emo){
   el.style.display='none';
   const d = document.createElement('div');
   d.className='thumb-ph'; d.textContent = emo || '🏷';
   el.parentNode.appendChild(d);
 }
-async function preloadImages(){
-  // 有本地实拍图的景点直接用本地图，跳过API请求；其余并行请求维基图
-  const needWiki = SPOTS.filter(s => !s.photo);
-  const results = await Promise.all(needWiki.map(async s => {
-    let u = await loadWikiImage(s.wiki);
-    if(!u && s.wiki2) u = await loadWikiImage(s.wiki2);
-    if(!u) u = await loadWikiImage(s.name);
-    return [s.id, u];
-  }));
-  results.forEach(([id, u]) => { if(u) imgCache[id] = u; });
-  const ld = document.getElementById('loading'); if(ld) ld.style.display='none';
-  buildList(); // 图片就位后刷新侧栏缩略图
-}
 
-// ---------- 启动 ----------
+// ---------- 启动（零外部图片请求，首屏最快） ----------
 buildList();
-preloadImages();
 
 // ---------- 行程面板交互 ----------
 document.querySelectorAll('.it-day').forEach(el=>{
