@@ -7,7 +7,10 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍁</text></svg>">
 <meta name="theme-color" content="#E63946">
 <meta name="description" content="名古屋-下吕-高山-白川乡-金泽 升龙道枫叶季巡礼地图，含行程、交通方式与实拍照片">
+<link rel="preconnect" href="https://webrd01.is.autonavi.com">
 <link rel="preconnect" href="https://server.arcgisonline.com" crossorigin>
+<link rel="dns-prefetch" href="https://commons.wikimedia.org">
+<link rel="dns-prefetch" href="https://upload.wikimedia.org">
 <link rel="stylesheet" href="leaflet.css"/>
 <link rel="preload" href="leaflet.js" as="script">
 <style>
@@ -229,7 +232,7 @@
       <b>线路</b>：<span style="color:#F59E0B;font-weight:700">━</span> 经典线路（点线段看交通）<span style="color:#7C3AED;font-weight:700">┅</span> 巡礼路线<br>
       <b>导航</b>：弹窗内点「复制坐标」，可粘贴到 Google / Apple 地图<br>
       <b>注意</b>：多数设施<b>闭馆前30分钟停止入场</b>；白川乡<b>只收现金</b>，展望台9:00才开放<br>
-      地图空白时点右上角「🗺」切换底图
+      地图空白时点右上角「🗺」切换底图 <span style="color:#c3c9d4">· v11</span>
     </div>
   </aside>
   <div id="map"></div>
@@ -507,38 +510,38 @@ L.control.scale({imperial:false, position:'bottomleft'}).addTo(map);
 // 多底图源 —— 全部免 API Key，全球覆盖
 const baseLayers = {};
 
-// 1. Esri 世界街道图（Akamai CDN，日本街道细节完整，默认）
+// 1. 高德地图（默认 · 国内 CDN 直连秒开，日本区域标注为中文，对中文游客更友好）
+baseLayers['高德地图'] = L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+  subdomains:['1','2','3','4'], maxZoom:18, keepBuffer:2, updateWhenZooming:false, updateWhenIdle:true,
+  attribution:'&copy; AutoNavi'
+});
+
+// 2. Esri 世界街道图（Akamai CDN，日本街道细节完整，境外首选）
 baseLayers['Esri 街道图'] = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
-  maxZoom:18, keepBuffer:4, updateWhenZooming:false,
+  maxZoom:18, keepBuffer:2, updateWhenZooming:false, updateWhenIdle:true,
   attribution:'&copy; Esri, HERE, Garmin, OpenStreetMap'
 });
 
-// 2. Esri 世界地形图（含等高线，适合看山谷地形）
+// 3. Esri 世界地形图（含等高线，适合看山谷地形）
 baseLayers['Esri 地形图'] = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-  maxZoom:18, keepBuffer:4, updateWhenZooming:false,
+  maxZoom:18, keepBuffer:2, updateWhenZooming:false, updateWhenIdle:true,
   attribution:'&copy; Esri, HERE, Garmin, USGS'
 });
 
-// 3. Esri 卫星影像
+// 4. Esri 卫星影像
 baseLayers['Esri 卫星图'] = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-  maxZoom:18, keepBuffer:4, updateWhenZooming:false,
+  maxZoom:18, keepBuffer:2, updateWhenZooming:false, updateWhenIdle:true,
   attribution:'&copy; Esri, Maxar, Earthstar Geographics'
-});
-
-// 4. 高德地图（国内访问快）
-baseLayers['高德地图'] = L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
-  subdomains:['1','2','3','4'], maxZoom:18, keepBuffer:4,
-  attribution:'&copy; AutoNavi'
 });
 
 // 5. OpenStreetMap（细节最全，国内较慢）
 baseLayers['OpenStreetMap'] = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom:19, keepBuffer:4,
+  maxZoom:19, keepBuffer:2, updateWhenIdle:true,
   attribution:'&copy; OpenStreetMap'
 });
 
-// 自动故障切换顺序
-const BASE_ORDER = ['Esri 街道图','Esri 地形图','高德地图','OpenStreetMap','Esri 卫星图'];
+// 自动故障切换顺序（默认高德，国内扫码秒开；失败自动降级到 Esri）
+const BASE_ORDER = ['高德地图','Esri 街道图','Esri 地形图','OpenStreetMap','Esri 卫星图'];
 let baseIdx = 0;
 
 // 默认底图
@@ -868,6 +871,22 @@ function imgFail(el, emo){
 
 // ---------- 启动（零外部图片请求，首屏最快） ----------
 buildList();
+
+// ---------- 空闲预载弹窗照片：首屏渲染完成后在后台拉取，点开弹窗即见 ----------
+// 尊重省流模式与 2G/3G 慢网；与首屏瓦片错峰（延迟启动 + 逐张间隔）
+(function preloadPopupPhotos(){
+  try{
+    const conn = navigator.connection || navigator.webkitConnection;
+    if(conn && (conn.saveData || /(^|[^e])2g/.test(conn.effectiveType || ''))) return;
+  }catch(e){}
+  const urls = SPOTS.filter(s=>s.photo).map(s=>s.photo);
+  if(!urls.length) return;
+  const run = ()=>{
+    urls.forEach((u, i)=>setTimeout(()=>{ const im = new Image(); im.decoding='async'; im.src = u; }, i*140));
+  };
+  const kick = ()=>{ if('requestIdleCallback' in window) requestIdleCallback(run, {timeout:6000}); else run(); };
+  setTimeout(kick, 1800);
+})();
 
 // ---------- 行程面板交互 ----------
 // 高亮某一天涉及的景点
